@@ -61,6 +61,20 @@ func LoadRecord() (azidentity.AuthenticationRecord, bool, error) {
 	return record, true, nil
 }
 
+// DeleteRecord removes the saved AuthenticationRecord from disk.
+// Returns nil if no record exists.
+func DeleteRecord() error {
+	path, err := RecordPath()
+	if err != nil {
+		return err
+	}
+	err = os.Remove(path)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	return err
+}
+
 // NewTokenCache creates a persistent token cache.
 func NewTokenCache() (azidentity.Cache, error) {
 	c, err := cache.New(&cache.Options{Name: "graph-cli"})
