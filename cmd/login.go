@@ -20,7 +20,7 @@ const graphScope = "https://graph.microsoft.com/.default"
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Log in to your Microsoft 365 account",
-	Long:  `Authenticate with your Microsoft 365 account using the device code flow.`,
+	Long:  `Authenticate with your Microsoft 365 account using an interactive browser login.`,
 	RunE:  runLogin,
 }
 
@@ -54,15 +54,11 @@ func runLogin(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cred, err := azidentity.NewDeviceCodeCredential(&azidentity.DeviceCodeCredentialOptions{
+	cred, err := azidentity.NewInteractiveBrowserCredential(&azidentity.InteractiveBrowserCredentialOptions{
 		TenantID:             tenantID,
 		ClientID:             clientID,
 		Cache:                tokenCache,
 		AuthenticationRecord: record,
-		UserPrompt: func(ctx context.Context, message azidentity.DeviceCodeMessage) error {
-			fmt.Println(message.Message)
-			return nil
-		},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to initialize credential: %w", err)
@@ -79,7 +75,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// No record or silent refresh failed — trigger the device code flow.
+	// No record or silent refresh failed — open browser for interactive login.
 	newRecord, err := cred.Authenticate(ctx, &policy.TokenRequestOptions{
 		Scopes: []string{graphScope},
 	})
