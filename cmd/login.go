@@ -15,7 +15,13 @@ import (
 	"github.com/spochic/graph-cli/internal/auth"
 )
 
-const graphScope = "https://graph.microsoft.com/.default"
+// graphScopes lists the delegated permissions this app requests.
+// These must be enabled as delegated permissions on the Azure app registration.
+var graphScopes = []string{
+	"Mail.Read",
+	"Calendars.Read",
+	"User.Read",
+}
 
 var loginCmd = &cobra.Command{
 	Use:   "login",
@@ -68,7 +74,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 	// If a record exists, try to use the cached token silently first.
 	if hasRecord {
-		_, err = cred.GetToken(ctx, policy.TokenRequestOptions{Scopes: []string{graphScope}})
+		_, err = cred.GetToken(ctx, policy.TokenRequestOptions{Scopes: graphScopes})
 		if err == nil {
 			fmt.Println("Already logged in as", record.Username)
 			return nil
@@ -77,7 +83,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 	// No record or silent refresh failed — open browser for interactive login.
 	newRecord, err := cred.Authenticate(ctx, &policy.TokenRequestOptions{
-		Scopes: []string{graphScope},
+		Scopes: graphScopes,
 	})
 	if err != nil {
 		return fmt.Errorf("authentication failed: %w", err)
